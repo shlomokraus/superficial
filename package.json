@@ -1,0 +1,39 @@
+{
+  "name": "Superficial",
+  "version": "0.1.0",
+  "description": "Github Probot that blocks superficial pull requests",
+  "main": "dist/index.js",
+  "repository": "https://github.com/shlomokraus/superficial.git",
+  "author": "Shlomo Kraus <plonit7@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "heroku-postbuild": "yarn run build",
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json --watch",
+    "dev": "nodemon --exec \"npm start\"",
+    "start": "probot run ./dist/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch --notify --notifyMode=change --coverage",
+    "now-start": "PRIVATE_KEY=$(echo $PRIVATE_KEY_BASE64 | base64 -d) npm start"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.1.0",
+    "@babel/traverse": "^7.1.0",
+    "@babel/types": "^7.0.0",
+    "@types/jest": "^23.3.2",
+    "@types/node": "^10.10.1",
+    "config": "^2.0.1",
+    "jest": "^23.6.0",
+    "json-pointer": "^0.6.0",
+    "jsondiffpatch": "^0.3.11",
+    "jsonpointer": "^4.0.1",
+    "lodash": "^4.17.11",
+    "nodemon": "^1.18.4",
+    "prettier": "^1.14.3",
+    "probot": "^7.1.2",
+    "rimraf": "^2.6.2",
+    "ts-jest": "^23.10.1",
+    "tslib": "^1.9.3",
+    "typescript": "^3.0.3"
+  }
+}
