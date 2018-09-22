@@ -10,7 +10,7 @@ export class Parser {
     return parser.parse(src, {
       allowImportExportEverywhere: true,
       sourceType: "unambiguous",
-      plugins: ["classProperties", "jsx", "typescript"]
+      plugins: ["classProperties", "jsx", "typescript", "objectRestSpread", "decorators-legacy", "decorators"]
     });
   }
 

@@ -25,11 +25,13 @@ export class GithubHelper
   };
   
   getFiles = async () => {
-    const filesRaw = await this.context.github.pullRequests.getFiles(
-      this.context.repo({ number: this.pr.number})
-    );
-    const files = filesRaw.data.map(file => file.filename);
-    return files;
+    const compare = await this.context.github.repos.compareCommits(this.context.repo({
+        base: this.pr.base.sha,
+        head: this.pr.head.sha
+      }));
+
+    const files = compare.data.files.filter(file=>file.status==="modified").map(file => file.filename);
+    return files as string[];
   };
 
   getRef = async () => {

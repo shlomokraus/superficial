@@ -7,6 +7,7 @@ import { GithubHelper } from "./Github";
 import { PullRequestsGetResponse } from "@octokit/rest";
 
 const extensions = ["ts", "js", "tsx", "jsx", "json"];
+const scriptExtensions = ["ts", "js", "tsx", "jsx"];
 const botIdentifier = "superficial-bot[bot]";
 
 export class Handler {
@@ -110,6 +111,7 @@ export class Handler {
     this.context.log.info("Getting files");
     let files = await this.githubHelper.getFiles();
     this.context.log.info("Got "+files.length+" in pull request");
+    this.context.log.debug(JSON.stringify(files));
     files = this.filterFiles(files);
     this.context.log.info("Got "+files.length+" relevant files after filter");
 
@@ -226,9 +228,16 @@ export class Handler {
   }
 
   compareFiles(source: string, target: string, filename: string) {
-    const left = Parser.parse(source, filename);
-    const right = Parser.parse(target, filename);
+     this.context.log.info("Comparing file "+filename)
+
+    const ext = fileExtension(filename);
+    const isScript = scriptExtensions.indexOf(ext)>=0;
+
+    const left = isScript ? Parser.parse(source, filename): Parser.prepare(source, { filepath: filename});
+    const right = isScript ? Parser.parse(target, filename) : Parser.prepare(target, { filepath: filename});
     const diff = Parser.diff(left, right, ["loc", "start", "end"]);
+    this.context.log.debug("Result is ", diff)
+
     return diff !== undefined;
   }
 
