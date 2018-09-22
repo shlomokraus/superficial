@@ -21,11 +21,12 @@
     "test:watch": "jest --watch --config ./jest.config.js"
   },
   "dependencies": {
-    "@types/node": "^10.5.2",
     "@babel/parser": "^7.1.0",
+    "@types/node": "^10.5.2",
     "file-extension": "^4.0.5",
     "jsondiffpatch": "^0.3.11",
     "lodash": "^4.17.11",
+    "prettier": "^1.14.3",
     "probot": "^7.0.0",
     "typescript": "^3.0.3"
   },
