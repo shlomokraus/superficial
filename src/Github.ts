@@ -85,7 +85,7 @@ export class GithubHelper
         base_tree: basetree.sha,
         tree: tree as any
     }));
-      const commit = await github.gitdata.createCommit(context.repo({message: "Removing files that only have style changes", tree: newTree.data.sha, parents: [basetree.sha]}));
+      const commit = await github.gitdata.createCommit(context.repo({message: `Reverting changes of ${files.length} files that only had formatting changes`, tree: newTree.data.sha, parents: [basetree.sha]}));
       await github.gitdata.updateReference(context.repo({number: this.pr.number, sha: commit.data.sha, ref: "heads/"+this.pr.head.ref }));
   };
   

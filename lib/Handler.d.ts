@@ -3,6 +3,7 @@ export declare class Handler {
     private readonly context;
     private githubHelper;
     private pr;
+    private persist;
     constructor(context: Context);
     handle(prNumber: number): Promise<void>;
     checkComment(): Promise<boolean>;

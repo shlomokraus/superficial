@@ -5,7 +5,7 @@ import { Template, Templates } from "./Template";
 import { template } from "lodash";
 import { GithubHelper } from "./Github";
 import { PullRequestsGetResponse } from "@octokit/rest";
-
+import { Persist } from "./Persist";
 const extensions = ["ts", "js", "tsx", "jsx", "json"];
 const scriptExtensions = ["ts", "js", "tsx", "jsx"];
 const botIdentifier = "superficial-bot[bot]";
@@ -14,6 +14,7 @@ export class Handler {
   private readonly context: Context;
   private githubHelper!: GithubHelper;
   private pr!: PullRequestsGetResponse;
+  private persist!: Persist;
 
   constructor(context: Context) {
     this.context = context;
@@ -39,30 +40,49 @@ export class Handler {
 
     // Initialize Helper
     this.githubHelper = new GithubHelper(this.context, this.pr);
-
-    this.context.log.debug("Starting check run");
-    // Run the check
-    const { problematic, errors } = await this.check();
-
-    this.context.log.debug(
-      "Check completed with " +
-      problematic.length +
-        " files and " +
-        errors.length +
-        " errors"
+    this.persist = new Persist(
+      this.context,
+      this.context.repo({ number: prNumber })
     );
 
     // If it is not a revert request, just update status
     if (!shouldRevert) {
+      this.context.log.debug("Starting check run");
+      // Run the check
+      const { problematic, errors } = await this.check();
+
+      this.context.log.debug(
+        "Check completed with " +
+          problematic.length +
+          " files and " +
+          errors.length +
+          " errors"
+      );
       this.context.log.debug("Updating pr status");
       await this.updateStatus(problematic.length === 0);
 
       this.context.log.debug("Posting comment");
       await this.postComment(problematic, errors);
+      if (problematic.length > 0) {
+        const payload = JSON.stringify(problematic);
+        this.context.log.info("Storing metadata", payload);
+        await this.persist.set("files", payload);
+      }
     } else {
       this.context.log.debug("Reverting files");
+      let files = (await this.persist.get("files")) as any[];
 
-      const revertPaths = problematic.map(item => item.file);
+      if(!files) {
+        this.context.log.info("No files in metada: ", files);
+      }
+      this.context.log.debug("Got files from metadata: ", files);
+
+      try {
+        files = JSON.parse(files as any);
+      } catch(ex){
+        this.context.log.error("Error while parsing files to json", ex)
+      }
+      const revertPaths = files.map(item => item.file);
       const revert = await Promise.all(
         revertPaths.map(async path => this.revertFile(path))
       );
@@ -72,6 +92,8 @@ export class Handler {
         await this.githubHelper.createCommit(revert);
         this.context.log.debug("Posting rever comment");
         await this.postRevertComment(revert.map(file => file.path));
+        await this.persist.set("files", undefined);
+
       }
     }
   }
@@ -110,10 +132,12 @@ export class Handler {
   async check() {
     this.context.log.info("Getting files");
     let files = await this.githubHelper.getFiles();
-    this.context.log.info("Got "+files.length+" in pull request");
+    this.context.log.info("Got " + files.length + " in pull request");
     this.context.log.debug(JSON.stringify(files));
     files = this.filterFiles(files);
-    this.context.log.info("Got "+files.length+" relevant files after filter");
+    this.context.log.info(
+      "Got " + files.length + " relevant files after filter"
+    );
 
     const results = await Promise.all(
       files.map(async file => this.parseFile(file))
@@ -228,15 +252,19 @@ export class Handler {
   }
 
   compareFiles(source: string, target: string, filename: string) {
-     this.context.log.info("Comparing file "+filename)
+    this.context.log.info("Comparing file " + filename);
 
     const ext = fileExtension(filename);
-    const isScript = scriptExtensions.indexOf(ext)>=0;
+    const isScript = scriptExtensions.indexOf(ext) >= 0;
 
-    const left = isScript ? Parser.parse(source, filename): Parser.prepare(source, { filepath: filename});
-    const right = isScript ? Parser.parse(target, filename) : Parser.prepare(target, { filepath: filename});
+    const left = isScript
+      ? Parser.parse(source, filename)
+      : Parser.prepare(source, { filepath: filename });
+    const right = isScript
+      ? Parser.parse(target, filename)
+      : Parser.prepare(target, { filepath: filename });
     const diff = Parser.diff(left, right, ["loc", "start", "end"]);
-    this.context.log.debug("Result is ", diff)
+    this.context.log.debug("Result is ", diff);
 
     return diff !== undefined;
   }
@@ -245,7 +273,7 @@ export class Handler {
     const { head } = this.pr;
 
     const state = success ? "success" : "failure";
-    this.context.log.info("Updating status to "+state)
+    this.context.log.info("Updating status to " + state);
 
     function getDescription() {
       if (success) return "ready to merge";
