@@ -40,7 +40,7 @@ export class GithubHelper
   getTree = async () => {
       const ref = await this.getRef();
       const tree = await this.context.github.gitdata.getTree(
-        this.context.repo({ tree_sha: ref.data.object.sha })
+        this.context.repo({ tree_sha: ref.object.sha })
       );
       return tree.data;
   }
@@ -80,10 +80,10 @@ export class GithubHelper
       });
 
     const newTree = await github.gitdata.createTree(context.repo({
-        base_tree: basetree.data.sha,
+        base_tree: basetree.sha,
         tree: tree as any
     }));
-      const commit = await github.gitdata.createCommit(context.repo({message: "Removing files that only have style changes", tree: newTree.data.sha, parents: [basetree.data.sha]}));
+      const commit = await github.gitdata.createCommit(context.repo({message: "Removing files that only have style changes", tree: newTree.data.sha, parents: [basetree.sha]}));
       await github.gitdata.updateReference(context.repo({number: this.pr.number, sha: commit.data.sha, ref: "heads/"+this.pr.head.ref }));
   };
   
