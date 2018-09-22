@@ -10,33 +10,61 @@ const botIdentifier = "superficialbot[bot]";
 
 export class Handler {
   private readonly context: Context;
-  private readonly githubHelper;
-  private readonly pr;
+  private githubHelper;
+  private pr;
 
-  constructor(context: Context, pr) {
+  constructor(context: Context) {
     this.context = context;
-    this.githubHelper = new Github(context, pr);
-    this.pr = pr;
   }
 
-  async handle() {
+  async handle(prNumber: number) {
+      let isComment = this.context.payload.comment;
+      let shouldRevert = await this.checkComment();
+    const pr = await this.context.github.pullRequests.get(this.context.repo({number: prNumber}));
+    this.pr = pr.data;
+
+    this.githubHelper = new Github(this.context, this.pr);
+    
     const { problematic, errors } = await this.check();
-
-    await this.updateStatus(problematic.length === 0);
-    await this.postComment(problematic, errors);
-
-    const revertPaths = problematic.map(item => item.file);
-    const revert = await Promise.all(
-      revertPaths.map(async path => this.revertFile(path))
-    );
-    if (revert.length > 0) {
-        console.log(this.githubHelper.type);
-   // await this.githubHelper.createCommit(revert);
-   //   await this.postRevertComment(revert.map(file => file.path));
-
+    if(!isComment){
+        await this.updateStatus(problematic.length === 0);
+        await this.postComment(problematic, errors);
+    } else if(shouldRevert) {    
+        const revertPaths = problematic.map(item => item.file);
+        const revert = await Promise.all(
+          revertPaths.map(async path => this.revertFile(path))
+        );
+        if (revert.length > 0) {
+        await this.githubHelper.createCommit(revert);
+          await this.postRevertComment(revert.map(file => file.path));
+    
+        }
     }
+   
   }
 
+  async checkComment() {
+      const context = this.context;
+    if(!this.context.payload.comment){
+        return false;
+    }
+    if(this.context.payload.comment.user.login!==botIdentifier){
+        return false;
+    }
+    const changes = context.payload.changes.body;
+    if(!changes){
+        return false;
+    }
+    const before = changes.from;
+    const after = context.payload.comment.body;
+
+    const beforeCheck = before.indexOf("- [ ] Remove selected files")>=0;
+    const afterCheck = after.indexOf("- [x] Remove selected files")>=0;
+    console.log(beforeCheck, afterCheck);
+
+    return beforeCheck && afterCheck;
+    
+  }
   async check() {
     const files = await this.getFiles();
     const results = await Promise.all(
@@ -96,13 +124,13 @@ export class Handler {
 
     const existing = await this.getExistingComment();
     if (existing) {
-      await context.github.issues.editComment(
+     /* await context.github.issues.editComment(
         context.repo({
           number: this.pr.number,
           body: `_(repository was updated since posting this message)_\n ${existing.body}`,
           comment_id: String(existing.id)
         })
-      );
+      );*/
     } else {
       if (files.length > 0) {
         await context.github.issues.createComment(

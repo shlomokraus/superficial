@@ -1,10 +1,11 @@
 import { Context } from "probot";
 export declare class Handler {
     private readonly context;
-    private readonly githubHelper;
-    private readonly pr;
-    constructor(context: Context, pr: any);
-    handle(): Promise<void>;
+    private githubHelper;
+    private pr;
+    constructor(context: Context);
+    handle(prNumber: number): Promise<void>;
+    checkComment(): Promise<boolean>;
     check(): Promise<{
         problematic: {
             file: string;
