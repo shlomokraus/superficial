@@ -21,6 +21,7 @@
     "test:watch": "jest --watch --config ./jest.config.js"
   },
   "dependencies": {
+    "@types/node": "^10.5.2",
     "@babel/parser": "^7.1.0",
     "file-extension": "^4.0.5",
     "jsondiffpatch": "^0.3.11",
@@ -30,7 +31,6 @@
   },
   "devDependencies": {
     "@types/jest": "^23.1.5",
-    "@types/node": "^10.5.2",
     "eslint-plugin-typescript": "^0.12.0",
     "jest": "^23.4.0",
     "nodemon": "^1.17.2",

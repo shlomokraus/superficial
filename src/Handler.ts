@@ -3,70 +3,86 @@ import { Parser } from "./Parser";
 import fileExtension from "file-extension";
 import { Template, Templates } from "./Template";
 import { template } from "lodash";
-import { Github } from "./Github";
+import { GithubHelper } from "./Github";
 const extensions = ["ts", "js", "tsx", "jsx", "json"];
 const botIdentifier = "superficialbot[bot]";
+import { PullRequestsGetResponse } from "@octokit/rest";
+
 // const botId = 43469792;
 
 export class Handler {
   private readonly context: Context;
-  private githubHelper;
-  private pr;
+  private githubHelper!: GithubHelper;
+  private pr!: PullRequestsGetResponse;
 
   constructor(context: Context) {
     this.context = context;
   }
 
   async handle(prNumber: number) {
-      let isComment = this.context.payload.comment;
-      let shouldRevert = await this.checkComment();
-    const pr = await this.context.github.pullRequests.get(this.context.repo({number: prNumber}));
+    
+    // First check if it is comment
+    let isComment = this.context.payload.comment;
+    let shouldRevert = await this.checkComment();
+    // If it is a comment but not a revert request, we got nothing to do here
+    if(isComment && !shouldRevert){
+        return;
+    }
+
+    // Set the PR object
+    const pr = await this.context.github.pullRequests.get(
+      this.context.repo({ number: prNumber })
+    );
     this.pr = pr.data;
 
-    this.githubHelper = new Github(this.context, this.pr);
-    
+    // Initialize Helper
+    this.githubHelper = new GithubHelper(this.context, this.pr);
+
+    // Run the check 
     const { problematic, errors } = await this.check();
-    if(!isComment){
-        await this.updateStatus(problematic.length === 0);
-        await this.postComment(problematic, errors);
-    } else if(shouldRevert) {    
-        const revertPaths = problematic.map(item => item.file);
-        const revert = await Promise.all(
-          revertPaths.map(async path => this.revertFile(path))
-        );
-        if (revert.length > 0) {
+
+    // If it is not a revert request, just update status
+    if (!shouldRevert) {
+      await this.updateStatus(problematic.length === 0);
+      await this.postComment(problematic, errors);
+    } else {
+      const revertPaths = problematic.map(item => item.file);
+      const revert = await Promise.all(
+        revertPaths.map(async path => this.revertFile(path))
+      );
+      if (revert.length > 0) {
         await this.githubHelper.createCommit(revert);
-          await this.postRevertComment(revert.map(file => file.path));
-    
-        }
+        await this.postRevertComment(revert.map(file => file.path));
+      }
     }
-   
   }
 
   async checkComment() {
-      const context = this.context;
-    if(!this.context.payload.comment){
-        return false;
+    const context = this.context;
+    if (!this.context.payload.comment) {
+      return false;
     }
-    if(this.context.payload.comment.user.login!==botIdentifier){
-        return false;
+    if (this.context.payload.comment.user.login !== botIdentifier) {
+      return false;
     }
     const changes = context.payload.changes.body;
-    if(!changes){
-        return false;
+    if (!changes) {
+      return false;
     }
     const before = changes.from;
     const after = context.payload.comment.body;
 
-    const beforeCheck = before.indexOf("- [ ] Remove selected files")>=0;
-    const afterCheck = after.indexOf("- [x] Remove selected files")>=0;
+    const beforeCheck = before.indexOf("- [ ] Remove selected files") >= 0;
+    const afterCheck = after.indexOf("- [x] Remove selected files") >= 0;
     console.log(beforeCheck, afterCheck);
 
     return beforeCheck && afterCheck;
-    
   }
+
   async check() {
-    const files = await this.getFiles();
+    let files = await this.githubHelper.getFiles();
+    files = this.filterFiles(files);
+
     const results = await Promise.all(
       files.map(async file => this.parseFile(file))
     );
@@ -96,7 +112,7 @@ export class Handler {
 
   revertFile = async (path: string) => {
     const base = this.pr.base.ref;
-    const source = await this.getFile(path, base);
+    const source = await this.githubHelper.getFile(path, base);
     return { path, content: source.content };
   };
 
@@ -124,13 +140,13 @@ export class Handler {
 
     const existing = await this.getExistingComment();
     if (existing) {
-     /* await context.github.issues.editComment(
+      await context.github.issues.editComment(
         context.repo({
           number: this.pr.number,
-          body: `_(repository was updated since posting this message)_\n ${existing.body}`,
+          body: await Template.get(Templates.updated),
           comment_id: String(existing.id)
         })
-      );*/
+      );
     } else {
       if (files.length > 0) {
         await context.github.issues.createComment(
@@ -142,7 +158,7 @@ export class Handler {
 
   getExistingComment = async () => {
     const comments = await this.context.github.issues.getComments(
-      this.context.repo({number: this.pr.number})
+      this.context.repo({ number: this.pr.number })
     );
     const filtered = comments.data.find(comment => {
       const isBot = comment.user.login === botIdentifier;
@@ -203,40 +219,19 @@ export class Handler {
     ) as any);
   };
 
-  getFiles = async () => {
-    const filesRaw = await this.context.github.pullRequests.getFiles(
-      this.context.repo({ number: this.pr.number})
-    );
-    const files = filesRaw.data.map(file => file.filename);
-    const filtered = this.filterFiles(files);
-    return filtered;
-  };
-
   getBaseAndHead = async (path: string) => {
     let head;
     let base;
     try {
       const headRef = this.pr.head.ref;
-      head = await this.getFileContent(path, headRef);
+      head = await this.githubHelper.getFileContent(path, headRef);
       const baseRef = this.pr.base.ref;
-      base = await this.getFileContent(path, baseRef);
+      base = await this.githubHelper.getFileContent(path, baseRef);
     } catch (ex) {
       ex = ex;
     }
 
     return { head, base };
-  };
-
-  getFileContent = async (path: string, ref: string) => {
-    const result = await this.getFile(path, ref);
-    const content = Buffer.from(result.content, "base64").toString();
-    return content;
-  };
-
-  getFile = async (path: string, ref: string) => {
-    const repo = this.context.repo({ path, ref });
-    const result = await this.context.github.repos.getContent(repo);
-    return result.data;
   };
 
   filterFiles(files: string[]) {

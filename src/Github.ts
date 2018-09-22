@@ -1,51 +1,75 @@
 import { Context } from "probot";
+import { PullRequestsGetResponse } from "@octokit/rest";
 
-export class Github {
+export class GithubHelper
+ {
   private readonly context: Context;
-  private readonly pr;
+  private readonly pr: PullRequestsGetResponse;
 
-  constructor(context: Context, pr) {
+  constructor(context: Context, pr: PullRequestsGetResponse) {
     this.context = context;
     this.pr = pr;
   }
+  
+  getFileContent = async (path: string, ref: string) => {
+        const result = await this.getFile(path, ref);
+        const content = Buffer.from(result.content, "base64").toString();
+        return content;
+      };
+  
+
+  getFile = async (path: string, ref: string) => {
+    const repo = this.context.repo({ path, ref });
+    const result = await this.context.github.repos.getContent(repo);
+    return result.data;
+  };
+  
+  getFiles = async () => {
+    const filesRaw = await this.context.github.pullRequests.getFiles(
+      this.context.repo({ number: this.pr.number})
+    );
+    const files = filesRaw.data.map(file => file.filename);
+    return files;
+  };
+
+  getRef = async () => {
+      const ref = await this.context.github.gitdata.getReference(this.context.repo({ref:"heads/"+this.pr.head.ref}));
+      return ref.data;
+  }
+
+  getTree = async () => {
+      const ref = await this.getRef();
+      const tree = await this.context.github.gitdata.getTree(
+        this.context.repo({ tree_sha: ref.data.object.sha })
+      );
+      return tree.data;
+  }
+
+  createBlob = async (content: string) => {
+    const blob = await this.context.github.gitdata.createBlob(
+        this.context.repo({
+            number: this.pr.number,
+        content,
+        encoding: 'base64'
+      }));
+      return blob.data;
+  };
 
   createCommit = async (files: { path: string, content: string}[]) => {
 
     const context = this.context;
     const github = context.github;
-    const issue = context.repo({number: this.pr.number});
-    const pr = await github.pullRequests.get(issue);
-    const ref = await github.gitdata.getReference(context.repo({ref:"heads/"+pr.data.head.ref}));
-    const basetree = await github.gitdata.getTree(
-      context.repo({ tree_sha: ref.data.object.sha })
-    );
+
+    const basetree = await this.getTree();
     const blobDict = {} as any;
 
     await Promise.all(
         files.map(async file => {
-        const blob = await github.gitdata.createBlob(
-            context.repo({
-                number: this.pr.number,
-            content: file.content,
-            encoding: 'base64'
-          }));
-          blobDict[file.path] = blob.data.sha;
+        const blob = await this.createBlob(file.content);
+          blobDict[file.path] = blob.sha;
           return
     }));
     
-    /*const tree = basetree.data.tree.map(item => {
-        const modified = blobDict[item.path];
-        if(modified) {
-            return {
-                path: item.path,
-                mode: "100644",
-                type: 'blob',
-                sha: modified
-              };
-        } else {
-            return item;
-        }
-    });*/
     const tree = files.map(function(file, index) {
         return {
           path: file.path,
@@ -60,7 +84,7 @@ export class Github {
         tree: tree as any
     }));
       const commit = await github.gitdata.createCommit(context.repo({message: "Removing files that only have style changes", tree: newTree.data.sha, parents: [basetree.data.sha]}));
-      await github.gitdata.updateReference(context.repo({number: this.pr.number, sha: commit.data.sha, ref: "heads/"+pr.data.head.ref }));
+      await github.gitdata.updateReference(context.repo({number: this.pr.number, sha: commit.data.sha, ref: "heads/"+this.pr.head.ref }));
   };
   
 }

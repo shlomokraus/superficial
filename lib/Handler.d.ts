@@ -39,12 +39,9 @@ export declare class Handler {
     compileComment(files: string[], errors: any[]): Promise<any>;
     compareFiles(source: string, target: string, filename: string): boolean;
     updateStatus: (success: boolean) => Promise<void>;
-    getFiles: () => Promise<string[]>;
     getBaseAndHead: (path: string) => Promise<{
         head: any;
         base: any;
     }>;
-    getFileContent: (path: string, ref: string) => Promise<string>;
-    getFile: (path: string, ref: string) => Promise<any>;
     filterFiles(files: string[]): string[];
 }
