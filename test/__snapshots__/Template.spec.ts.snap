@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Template Should load template file 1`] = `
+"### Don't be superficial!
+
+This pull request contains files that have style changes without any functionality change. 
+This makes the review and tracking of commit history harder. Please undo the changes to 
+the following files: 
+
+<%= files %>"
+`;

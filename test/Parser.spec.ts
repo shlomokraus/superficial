@@ -45,14 +45,5 @@ describe("Parser", () => {
     });
   });
 
-  describe("flatten()", () => {
-
-    it("Should flatten keys and values", () => {
-        const obj = { a: { b: {c: 1 }}}
-        const flatten = Parser.flatten(obj);
-        expect(flatten).toHaveProperty("/a/b/c");
-        expect(flatten["/a/b/c"]).toEqual(1);
-    })
-  })
 
 });

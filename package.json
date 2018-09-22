@@ -1,39 +1,54 @@
 {
-  "name": "Superficial",
-  "version": "0.1.0",
-  "description": "Github Probot that blocks superficial pull requests",
-  "main": "dist/index.js",
-  "repository": "https://github.com/shlomokraus/superficial.git",
+  "name": "superficial",
+  "version": "1.0.0",
+  "description": "Block superficial pull requests",
   "author": "Shlomo Kraus <plonit7@gmail.com>",
-  "license": "MIT",
+  "license": "ISC",
+  "repository": "https://github.com/shlomokraus/superficial.git",
+  "homepage": "https://github.com/shlomokraus/superficial",
+  "bugs": "https://github.com/shlomokraus/superficial/issues",
+  "keywords": [
+    "probot",
+    "github",
+    "probot-app"
+  ],
   "scripts": {
-    "heroku-postbuild": "yarn run build",
     "build": "tsc -p tsconfig.json",
-    "watch": "tsc -p tsconfig.json --watch",
     "dev": "nodemon --exec \"npm start\"",
-    "start": "probot run ./dist/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch --notify --notifyMode=change --coverage",
-    "now-start": "PRIVATE_KEY=$(echo $PRIVATE_KEY_BASE64 | base64 -d) npm start"
+    "start": "probot run ./lib/index.js",
+    "lint": "standard **/*.ts --fix",
+    "test": "jest  --config ./jest.config.js",
+    "test:watch": "jest --watch --config ./jest.config.js"
   },
   "dependencies": {
     "@babel/parser": "^7.1.0",
-    "@babel/traverse": "^7.1.0",
-    "@babel/types": "^7.0.0",
-    "@types/jest": "^23.3.2",
-    "@types/node": "^10.10.1",
-    "config": "^2.0.1",
-    "jest": "^23.6.0",
-    "json-pointer": "^0.6.0",
+    "file-extension": "^4.0.5",
     "jsondiffpatch": "^0.3.11",
-    "jsonpointer": "^4.0.1",
     "lodash": "^4.17.11",
-    "nodemon": "^1.18.4",
-    "prettier": "^1.14.3",
-    "probot": "^7.1.2",
-    "rimraf": "^2.6.2",
-    "ts-jest": "^23.10.1",
-    "tslib": "^1.9.3",
+    "probot": "^7.0.0",
     "typescript": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.1.5",
+    "@types/node": "^10.5.2",
+    "eslint-plugin-typescript": "^0.12.0",
+    "jest": "^23.4.0",
+    "nodemon": "^1.17.2",
+    "smee-client": "^1.0.2",
+    "standard": "^10.0.3",
+    "ts-jest": "^23.0.0",
+    "typescript-eslint-parser": "^18.0.0"
+  },
+  "engines": {
+    "node": ">= 8.3.0"
+  },
+  "standard": {
+    "parser": "typescript-eslint-parser",
+    "env": [
+      "jest"
+    ],
+    "plugins": [
+      "typescript"
+    ]
   }
 }

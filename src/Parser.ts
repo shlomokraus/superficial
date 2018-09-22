@@ -1,7 +1,6 @@
 const parser = require("@babel/parser");
 const jsondiffpatch = require("jsondiffpatch");
 const prettier = require("prettier");
-import jsonpointer from "json-pointer";
 
 export class Parser {
   static parse(src: string, filename: string, prettier = true) {
@@ -9,6 +8,8 @@ export class Parser {
           src = this.prepare(src, { filepath: filename});
       }
     return parser.parse(src, {
+      allowImportExportEverywhere: true,
+      sourceType: "unambiguous",
       plugins: ["classProperties", "jsx", "typescript"]
     });
   }
@@ -35,7 +36,5 @@ export class Parser {
     return diff.diff(src, target);
   }
 
-  static flatten(obj) {
-    return jsonpointer.dict(obj, null);   
-  }
+ 
 }
