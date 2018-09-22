@@ -143,10 +143,11 @@ export class Handler {
 
     const existing = await this.getExistingComment();
     if (existing) {
+        const body = files.length === 0 ? await Template.get(Templates.updated) : comment;
       await context.github.issues.editComment(
         context.repo({
           number: this.pr.number,
-          body: await Template.get(Templates.updated),
+          body,
           comment_id: String(existing.id)
         })
       );
