@@ -6,7 +6,6 @@ import { template } from "lodash";
 import { GithubHelper } from "./Github";
 import { PullRequestsGetResponse } from "@octokit/rest";
 
-
 const extensions = ["ts", "js", "tsx", "jsx", "json"];
 const botIdentifier = "superficial-bot[bot]";
 
@@ -20,17 +19,18 @@ export class Handler {
   }
 
   async handle(prNumber: number) {
-    
     // First check if it is comment
     let isComment = this.context.payload.comment;
     let shouldRevert = await this.checkComment();
 
     // If it is a comment but not a revert request, we got nothing to do here
-    if(isComment && !shouldRevert){
-        return;
+    if (isComment && !shouldRevert) {
+      this.context.log.info("Comment is not a revert request");
+      return;
     }
 
     // Set the PR object
+    this.context.log.info("Getting pull request number " + prNumber);
     const pr = await this.context.github.pullRequests.get(
       this.context.repo({ number: prNumber })
     );
@@ -39,56 +39,85 @@ export class Handler {
     // Initialize Helper
     this.githubHelper = new GithubHelper(this.context, this.pr);
 
-    // Run the check 
+    this.context.log.debug("Starting check run");
+    // Run the check
     const { problematic, errors } = await this.check();
+
+    this.context.log.debug(
+      "Check completed with " +
+      problematic.length +
+        " files and " +
+        errors.length +
+        " errors"
+    );
 
     // If it is not a revert request, just update status
     if (!shouldRevert) {
+      this.context.log.debug("Updating pr status");
       await this.updateStatus(problematic.length === 0);
+
+      this.context.log.debug("Posting comment");
       await this.postComment(problematic, errors);
     } else {
+      this.context.log.debug("Reverting files");
+
       const revertPaths = problematic.map(item => item.file);
       const revert = await Promise.all(
         revertPaths.map(async path => this.revertFile(path))
       );
+
       if (revert.length > 0) {
+        this.context.log.debug("Creating commit");
         await this.githubHelper.createCommit(revert);
+        this.context.log.debug("Posting rever comment");
         await this.postRevertComment(revert.map(file => file.path));
       }
     }
   }
 
   async checkComment() {
+    this.context.log.info("Checking comment...");
+
     const context = this.context;
     if (!this.context.payload.comment) {
+      this.context.log.debug("No comment payload");
       return false;
     }
 
     if (this.context.payload.comment.user.login !== botIdentifier) {
+      this.context.log.debug("Comment is not owned by bot");
       return false;
     }
 
     const changes = context.payload.changes.body;
     if (!changes) {
+      this.context.log.debug("No changes to comment body");
       return false;
     }
 
     const before = changes.from;
     const after = context.payload.comment.body;
 
-    const beforeCheck = before.indexOf("- [ ] Remove selected files") >= 0;
+    const beforeCheck = before.indexOf("- [x] Remove selected files") < 0;
     const afterCheck = after.indexOf("- [x] Remove selected files") >= 0;
+
+    this.context.log.debug("Before and after check:", beforeCheck, afterCheck);
 
     return beforeCheck && afterCheck;
   }
 
   async check() {
+    this.context.log.info("Getting files");
     let files = await this.githubHelper.getFiles();
+    this.context.log.info("Got "+files.length+" in pull request");
     files = this.filterFiles(files);
+    this.context.log.info("Got "+files.length+" relevant files after filter");
 
     const results = await Promise.all(
       files.map(async file => this.parseFile(file))
     );
+    this.context.log.info("Finished parsing files, preparing results");
+
     const problematic = results.filter(result => !result.valid);
     const errors = results.filter(result => result.error);
     return { problematic, errors };
@@ -143,7 +172,8 @@ export class Handler {
 
     const existing = await this.getExistingComment();
     if (existing) {
-        const body = files.length === 0 ? await Template.get(Templates.updated) : comment;
+      const body =
+        files.length === 0 ? await Template.get(Templates.updated) : comment;
       await context.github.issues.editComment(
         context.repo({
           number: this.pr.number,
@@ -206,6 +236,7 @@ export class Handler {
     const { head } = this.pr;
 
     const state = success ? "success" : "failure";
+    this.context.log.info("Updating status to "+state)
 
     function getDescription() {
       if (success) return "ready to merge";
