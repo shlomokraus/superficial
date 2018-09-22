@@ -4,11 +4,11 @@ import fileExtension from "file-extension";
 import { Template, Templates } from "./Template";
 import { template } from "lodash";
 import { GithubHelper } from "./Github";
-const extensions = ["ts", "js", "tsx", "jsx", "json"];
-const botIdentifier = "superficialbot[bot]";
 import { PullRequestsGetResponse } from "@octokit/rest";
 
-// const botId = 43469792;
+
+const extensions = ["ts", "js", "tsx", "jsx", "json"];
+const botIdentifier = "superficial-bot[bot]";
 
 export class Handler {
   private readonly context: Context;
@@ -24,6 +24,7 @@ export class Handler {
     // First check if it is comment
     let isComment = this.context.payload.comment;
     let shouldRevert = await this.checkComment();
+
     // If it is a comment but not a revert request, we got nothing to do here
     if(isComment && !shouldRevert){
         return;
@@ -62,19 +63,21 @@ export class Handler {
     if (!this.context.payload.comment) {
       return false;
     }
+
     if (this.context.payload.comment.user.login !== botIdentifier) {
       return false;
     }
+
     const changes = context.payload.changes.body;
     if (!changes) {
       return false;
     }
+
     const before = changes.from;
     const after = context.payload.comment.body;
 
     const beforeCheck = before.indexOf("- [ ] Remove selected files") >= 0;
     const afterCheck = after.indexOf("- [x] Remove selected files") >= 0;
-    console.log(beforeCheck, afterCheck);
 
     return beforeCheck && afterCheck;
   }
