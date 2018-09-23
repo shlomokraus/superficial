@@ -52,7 +52,7 @@ export class Handler {
 
   async handleCommentEdit() {
     let shouldRevert = await this.checkComment();
-    if (!this.context.payload.comment && !shouldRevert) {
+    if (!shouldRevert) {
       this.logger.info("Comment is not a revert request");
       return;
     }
@@ -78,7 +78,7 @@ export class Handler {
     if (revert.length > 0) {
       this.logger.debug("Creating commit");
       await this.githubHelper.createCommit(revert);
-      this.logger.debug("Posting rever comment");
+      this.logger.debug("Posting revert comment");
       await this.postRevertComment(revert.map(file => file.path));
       await this.persist.set("files", undefined);
     }
