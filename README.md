@@ -1,10 +1,8 @@
 <img align="left" width="100" height="100" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/logo.png">
 
-# superficial
+# [SUPERFICIAL](https://github.com/apps/superficial-bot)
 
 *A GitHub ([Probot](https://github.com/probot/probot)) app that blocks and fixes superficial pull requests*
-
-[Click here to install Superficial on your repo](https://github.com/apps/superficial-bot)
 
 # Introduction
 
