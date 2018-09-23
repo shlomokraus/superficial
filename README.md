@@ -2,11 +2,15 @@
 
 # superficial
 
-> A GitHub ([Probot](https://github.com/probot/probot)) app that blocks and fixes superficial pull requests
+*A GitHub ([Probot](https://github.com/probot/probot)) app that blocks and fixes superficial pull requests*
 
 # Introduction
 
-Code review is a tedious task. It is more frustrating to find files that only have formatting updates without a change to functionality - that is - **superficial changes**. These files clutter the PR and making the code review task even harder.
+Code review is a tedious task. It is more frustrating to find files that only have formatting updates without a change to functionality - those are **superficial changes**. 
+
+There are many reasons why this happens - a developer might have an automatic formatter on his IDE, he might started editing a file and stopped without reverting all changes and many more. No matter the reason, this makes the code review task even harder and also makes it difficult to track changes in the commit log. 
+
+Formatting changes should only be allowed in files that have actuall functionality change. A formatting only change should be submitted in its own pr. 
 
 ## This bot can: 
 1. Post status message indicating the PR contains superficial updates.
