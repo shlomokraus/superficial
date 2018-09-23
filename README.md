@@ -4,6 +4,8 @@
 
 *A GitHub ([Probot](https://github.com/probot/probot)) app that blocks and fixes superficial pull requests*
 
+[Click here to install Superficial on your repo](https://github.com/apps/superficial-bot)
+
 # Introduction
 
 Code review is a tedious task. It is more frustrating to find files that only have formatting updates without a change to functionality - those are **superficial changes**. 
@@ -30,7 +32,13 @@ This gives us high accuracy since it ignores any change that doesn't affect the 
 - Typescript (.ts, .tsx)
 - Comming soon: css
 
-## Setup
+# Installing the bot
+
+You have two options: 
+1. Deploy your own server.
+2. ### [Install Superficial on your repo](https://github.com/apps/superficial-bot)
+
+## Setup (for local run)
 
 1. Setup environment variables as explained in [the Probot guide](https://probot.github.io/docs/development/)
 2. Install with `yarn install` 
