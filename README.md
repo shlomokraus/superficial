@@ -4,6 +4,8 @@
 
 *A GitHub ([Probot](https://github.com/probot/probot)) app that blocks and fixes superficial pull requests*
 
+![Alt Text](https://media.giphy.com/media/sRFu9nIfCiiUSa1ddv/giphy.gif)
+
 # Introduction
 
 Code review is a tedious task. It is more frustrating to find files that only have formatting updates without a change of functionality - those are **superficial changes**. 
