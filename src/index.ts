@@ -40,7 +40,6 @@ async function extractPrs(context) {
   ) {
     prs = [context.payload.pull_request];
   } else {
-    console.log(JSON.stringify(context));
     prs = context.payload.check_suite.pull_requests;
   }
   return prs;
