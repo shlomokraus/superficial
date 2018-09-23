@@ -23,15 +23,7 @@ export class Parser {
     const diff = jsondiffpatch.create({
       propertyFilter: function(name, context) {
         return ignoreKeys.indexOf(name)<0;
-      },
-      objectHash: function(obj) {
-        // this function is used only to when objects are not equal by ref
-        if(obj.type==="ClassProperty"){
-            console.log(obj);
-            return "ClassProperty"+obj.key.name;
-        }
-        return null;
-    },
+      }
     });
     return diff.diff(src, target);
   }

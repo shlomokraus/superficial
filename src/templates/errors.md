@@ -1,1 +1,1 @@
-<%= errors => files were not parsed due to errors. 
+<%= errors %> files were not parsed due to errors. 
