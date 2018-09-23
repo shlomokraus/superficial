@@ -57,7 +57,7 @@ export class Handler {
       return;
     }
 
-    this.logger.debug("Reverting files");
+    this.logger.info("Reverting files");
     let files = (await this.persist.get("files")) as any[];
 
     if (!files) {
@@ -76,20 +76,20 @@ export class Handler {
     );
 
     if (revert.length > 0) {
-      this.logger.debug("Creating commit");
+      this.logger.info("Creating commit");
       await this.githubHelper.createCommit(revert);
-      this.logger.debug("Posting revert comment");
+      this.logger.info("Posting revert comment");
       await this.postRevertComment(revert.map(file => file.path));
       await this.persist.set("files", undefined);
     }
   }
 
   async handleCheckStatus() {
-    this.logger.debug("Starting check run");
+    this.logger.info("Starting check run");
 
     const { problematic, errors } = await this.check();
 
-    this.logger.debug(
+    this.logger.info(
       "Check completed with " +
         problematic.length +
         " files and " +
@@ -115,18 +115,18 @@ export class Handler {
 
     const context = this.context;
     if (!this.context.payload.comment) {
-      this.logger.debug("No comment payload");
+      this.logger.info("No comment payload");
       return false;
     }
 
     if (this.context.payload.comment.user.login !== BOT_IDENTIFIER) {
-      this.logger.debug("Comment is not owned by bot");
+      this.logger.info("Comment is not owned by bot");
       return false;
     }
 
     const changes = context.payload.changes.body;
     if (!changes) {
-      this.logger.debug("No changes to comment body");
+      this.logger.info("No changes to comment body");
       return false;
     }
 
