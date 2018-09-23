@@ -4,7 +4,7 @@
 
 *A GitHub ([Probot](https://github.com/probot/probot)) app that blocks and fixes superficial pull requests*
 
-![Alt Text](https://media.giphy.com/media/8TtgldefRwdUk5FLzr/giphy.gif)
+<img align="center" width="750" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/superficial.gif">
 
 # Introduction
 
