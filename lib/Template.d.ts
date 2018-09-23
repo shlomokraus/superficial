@@ -6,5 +6,5 @@ export declare enum Templates {
     errors = "errors.md"
 }
 export declare class Template {
-    static get(template: Templates): Promise<string>;
+    static get(template: Templates): string;
 }

@@ -1,118 +1,38 @@
 const { Application } = require("probot");
 import { Handler } from "../src/Handler";
 import { Parser } from "../src/Parser";
-const pr_sync_payload = require("./mocks/pull_request_open.json");
+const prOpenMock = require("./mocks/pull_request_open.json");
+const prMock = require("./mocks/getPullRequest.json");
+const issueCommentEditedMock = require("./mocks/issue_comment_edited.json");
+const checkSuiteRequestedMock = require("./mocks/check_suite_requested.json");
 
 jest.mock("../src/Parser");
+jest.mock("../src/Github");
+jest.mock("../src/Persist");
+
 describe("Handler", () => {
   let context, issue, repo;
 
-  describe("getBaseAndHead()", () => {
-    beforeEach(() => {
-      setupMocks();
+  describe("handler()", () => {
+   
+    it("Should handle check status request", async () => {
+      setupMocks(checkSuiteRequestedMock);
+      const handler = new Handler(context, prMock);
+      handler.handleCheckStatus = jest.fn();
+      await handler.handle();
+      expect(handler.handleCheckStatus).toBeCalled();
     });
 
-    it("Should get file from master and branch", async () => {
-      const handler = new Handler(context as any);
-      handler.getFileContent = jest
-        .fn()
-        .mockReturnValue(Promise.resolve("ABC"));
-      const files = await handler.getBaseAndHead("test");
-      const first = (handler.getFileContent as any).mock.calls[0];
-      const second = (handler.getFileContent as any).mock.calls[1];
-      expect(first).toEqual(["test", "test-style"]);
-      expect(second).toEqual(["test", "master"]);
-      expect(files.head).toEqual("ABC");
-      expect(files.base).toEqual("ABC");
-    });
-  });
-
-  describe("compareFiles()", () => {
-    it("Should compare files and return true if diff is undefined", () => {
-      const handler = new Handler(context as any);
-
-      Parser.diff.mockImplementationOnce(() => undefined);
-      const result = handler.compareFiles("source", "target", "test.ts");
-      expect(Parser.parse).toBeCalledTimes(2);
-      expect(Parser.parse.mock.calls[0]).toEqual(["source", "test.ts"]);
-      expect(Parser.parse.mock.calls[1]).toEqual(["target", "test.ts"]);
-      expect(result).toEqual(false);
-    });
-
-    it("Should false if diff is not undefined", () => {
-      const handler = new Handler(context as any);
-
-      Parser.diff.mockImplementationOnce(() => ({}));
-      const result = handler.compareFiles("source", "target", "test.ts");
-      expect(result).toEqual(true);
+    it("Should handle comment edit", async () => {
+      setupMocks(issueCommentEditedMock);
+      const handler = new Handler(context, prMock);
+      handler.handleCommentEdit = jest.fn();
+      await handler.handle();
+      expect(handler.handleCommentEdit).toBeCalled();
     });
   });
 
-  describe("getFiles()", () => {
-    beforeEach(() => {
-      setupMocks();
-    });
-
-    it("Should extract files from pr", async () => {
-      const handler = new Handler(context as any);
-      const files = await handler.getFiles();
-      expect(context.github.pullRequests.getFiles).toHaveBeenCalled();
-      expect(files).toHaveLength(2);
-      expect(files[0]).toEqual("test.ts");
-      expect(files[1]).toEqual("test.js");
-    });
-
-    it("Should filter out non relevant extensions", async () => {
-      const handler = new Handler(context as any);
-      context.github.pullRequests.getFiles = jest.fn().mockReturnValue(
-        Promise.resolve({
-          data: [{ filename: "allow.ts" }, { filename: "block.exe" }]
-        })
-      )
-      const files = await handler.getFiles();
-
-      expect(files).toEqual(["allow.ts"]);
-    });
-  });
-  
-  describe("compileComment()", () => {
-    beforeEach(() => {
-      setupMocks();
-    });
-
-    it("Should filter out non relevant extensions", async () => {
-      const handler = new Handler(context as any);
-      const files = ["/test.ts", "/test.js"];
-      const comment = await handler.compileComment(files);
-      expect(comment).toMatchSnapshot();
-    });
-  });
-
-  describe("updateStatus()", () => {
-    beforeEach(() => {
-      setupMocks();
-    });
-
-    it("Should post status update success", async () => {
-      const handler = new Handler(context as any);
-      await handler.updateStatus(true);
-      expect(context.github.repos.createStatus).toHaveBeenCalled();
-      expect(context.github.repos.createStatus.mock.calls[0][0].state).toEqual(
-        "success"
-      );
-    });
-
-    it("Should post status update failure", async () => {
-      const handler = new Handler(context as any);
-      await handler.updateStatus(false);
-      expect(context.github.repos.createStatus).toHaveBeenCalled();
-      expect(context.github.repos.createStatus.mock.calls[0][0].state).toEqual(
-        "failure"
-      );
-    });
-  });
-
-  const setupMocks = () => {
+  const setupMocks = (basePayload) => {
     jest.clearAllMocks();
     issue = {
       owner: "tet",
@@ -125,7 +45,7 @@ describe("Handler", () => {
     };
     context = Object.assign(
       {
-        log: () => {},
+        log: { info: jest.fn(), error: jest.fn(), debug: jest.fn()},
         repo: val => Object.assign(val, repo),
         github: {
           repos: {
@@ -141,7 +61,7 @@ describe("Handler", () => {
         },
         issue: () => issue
       },
-      pr_sync_payload
+      basePayload
     );
   };
 });

@@ -1,11 +1,19 @@
 import { Context } from "probot";
+import { PullRequestsGetResponse } from "@octokit/rest";
+import { CommentTags } from "./Constants";
 export declare class Handler {
     private readonly context;
     private githubHelper;
     private pr;
     private persist;
-    constructor(context: Context);
-    handle(prNumber: number): Promise<void>;
+    private readonly logger;
+    constructor(context: Context, pr: PullRequestsGetResponse);
+    /**
+     * Main entry point
+     */
+    handle(): Promise<void>;
+    handleCommentEdit(): Promise<void>;
+    handleCheckStatus(): Promise<void>;
     checkComment(): Promise<boolean>;
     check(): Promise<{
         problematic: {
@@ -36,7 +44,7 @@ export declare class Handler {
         file: string;
         error: string;
     }[]) => Promise<void>;
-    getExistingComment: () => Promise<import("@octokit/rest").IssuesGetCommentsResponseItem | undefined>;
+    getBotMainComment: () => Promise<import("@octokit/rest").IssuesGetCommentsResponseItem | undefined>;
     compileComment(files: string[], errors: any[]): Promise<any>;
     compareFiles(source: string, target: string, filename: string): boolean;
     updateStatus: (success: boolean) => Promise<void>;
@@ -45,4 +53,8 @@ export declare class Handler {
         base: any;
     }>;
     filterFiles(files: string[]): string[];
+    /**
+     * Tag comment with metadata
+     */
+    tagComment(body: any, commentTag: CommentTags): any;
 }

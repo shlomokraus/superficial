@@ -16,3 +16,4 @@ Click this checkbox to trigger an automatic commit:
 Path  | 
 ---------| 
 <%= files %>
+

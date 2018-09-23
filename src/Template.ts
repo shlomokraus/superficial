@@ -11,7 +11,7 @@ export enum Templates {
 
 export class Template {
   
-  static async get(template: Templates) {
+  static get(template: Templates) {
     const file = path.resolve(`./src/templates/${template}`)
     const str = fs.readFileSync(file,  "utf8");
     return str;
