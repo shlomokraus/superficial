@@ -16,7 +16,6 @@ export = async (app: Application) => {
   app.on(events, async context => {
     let prs = await extractPrs(context);
 
-    console.log("CONTEXT", context);
     await Promise.all(
       prs.map(async pr => {
         const handler = new Handler(context, pr);
