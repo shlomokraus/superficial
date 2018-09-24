@@ -19,7 +19,7 @@ Formatting changes should only be allowed in files that have actual functionalit
 
 | <img align="left" width="100%%" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/basic-message.png" />  | <img align="right" width="100%" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/revert-message.png" /> | 
 |:---:|:---:|
-| Post warnning comment | Revert changes to files | 
+| _Post warnning comment_ | _Revert changes to files_ | 
 
 ## How does it work? 
 This bot has a three-step process to determine superficial updates: 
@@ -37,15 +37,8 @@ This gives us high accuracy since it ignores any change that doesn't affect the 
 # Installing the bot
 
 You have two options: 
-1. Deploy your own server.
-2. ### [Install Superficial on your repo](https://github.com/apps/superficial-bot)
-
-
----
-
-<img align="center" width="750" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/superficial.gif">
-
----
+1. Deploy your own server or...
+2. [Click to unstall Superficial on your repo](https://github.com/apps/superficial-bot)
 
 ## Setup (for local run)
 
@@ -56,6 +49,12 @@ You have two options:
 
 Run tests: 
 `yarn run test`
+
+## Example
+
+<img align="center" width="750" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/superficial.gif">
+
+---
 
 ## Contributing
 
