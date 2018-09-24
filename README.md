@@ -8,14 +8,18 @@
 
 Code review is a tedious task. It is more frustrating to find files that only have formatting updates without a change of functionality - those are **superficial changes**. 
 
-There are many reasons why this happens - a developer might have an automatic beautify on his IDE, he might start editing a file and stopped without reverting all changes and many more. No matter the reason, this makes the code review task even harder and also makes it difficult to track changes in the commit log. 
+There are many reasons why this happens - an automatic beautifier running in IDE, forgetting to revert changes, forgotten newlines or spaces. No matter the reason, superficial update makes the code review task even harder and adds chaos to the commit log. 
 
-Formatting changes should only be allowed in files that have actual functionality change. A formatting only changes should be submitted in its own pr. 
+**Formatting changes should only be allowed in files that have actual functionality change or be submitted in their own pr.**
 
-## This bot can: 
+## This bot will: 
 1. Post status message indicating the PR contains superficial updates.
 2. Post comment listing the problematic files.
 3. Automatically revert to base all superficial files.
+
+| <img align="left" width="100%%" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/basic-message.png" />  | <img align="right" width="100%" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/revert-message.png" /> | 
+|:---:|:---:|
+| _Post warnning comment_ | _Revert changes to files_ | 
 
 ## How does it work? 
 This bot has a three-step process to determine superficial updates: 
@@ -33,16 +37,10 @@ This gives us high accuracy since it ignores any change that doesn't affect the 
 # Installing the bot
 
 You have two options: 
-1. Deploy your own server.
-2. ### [Install Superficial on your repo](https://github.com/apps/superficial-bot)
+1. Deploy your own server or...
+2. [Click to unstall Superficial on your repo](https://github.com/apps/superficial-bot)
 
-
----
-
-<img align="center" width="750" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/superficial.gif">
-
----
-
+> This is an open source project, deployed as a courtesy by the maintainer. It is provided as-is and without any Liability :heart: 
 ## Setup (for local run)
 
 1. Setup environment variables as explained in [the Probot guide](https://probot.github.io/docs/development/)
@@ -52,6 +50,12 @@ You have two options:
 
 Run tests: 
 `yarn run test`
+
+## Example
+
+<img align="center" width="750" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/superficial.gif">
+
+---
 
 ## Contributing
 
