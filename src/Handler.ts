@@ -40,10 +40,7 @@ export class Handler {
 
     this.logger.info("Handling action " + this.context.name);
 
-    if (
-      event === "issue_comment" &&
-      this.context.payload.action === "edited"
-    ) {
+    if (event === "issue_comment" && this.context.payload.action === "edited") {
       return this.handleCommentEdit();
     } else {
       return this.handleCheckStatus();

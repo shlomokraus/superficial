@@ -14,7 +14,6 @@ describe("Handler", () => {
   let context, issue, repo;
 
   describe("handler()", () => {
-   
     it("Should handle check status request", async () => {
       setupMocks(checkSuiteRequestedMock);
       const handler = new Handler(context, prMock);
@@ -32,7 +31,7 @@ describe("Handler", () => {
     });
   });
 
-  const setupMocks = (basePayload) => {
+  const setupMocks = basePayload => {
     jest.clearAllMocks();
     issue = {
       owner: "tet",
@@ -45,7 +44,7 @@ describe("Handler", () => {
     };
     context = Object.assign(
       {
-        log: { info: jest.fn(), error: jest.fn(), debug: jest.fn()},
+        log: { info: jest.fn(), error: jest.fn(), debug: jest.fn() },
         repo: val => Object.assign(val, repo),
         github: {
           repos: {

@@ -44,6 +44,4 @@ describe("Parser", () => {
       expect(after).not.toHaveProperty("ignore");
     });
   });
-
-
 });

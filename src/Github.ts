@@ -1,8 +1,6 @@
 import { Context } from "probot";
 import { PullRequestsGetResponse } from "@octokit/rest";
 
-
-
 export class GithubHelper {
   private readonly context: Context;
   private readonly pr: PullRequestsGetResponse;
@@ -12,19 +10,19 @@ export class GithubHelper {
     this.pr = pr;
   }
 
-  async getFileContent  (path: string, ref: string) {
+  async getFileContent(path: string, ref: string) {
     const result = await this.getFile(path, ref);
     const content = Buffer.from(result.content, "base64").toString();
     return content;
-  };
+  }
 
   async getFile(path: string, ref: string) {
     const repo = this.context.repo({ path, ref });
     const result = await this.context.github.repos.getContent(repo);
     return result.data;
-  };
+  }
 
-  async getFiles  () {
+  async getFiles() {
     const compare = await this.context.github.repos.compareCommits(
       this.context.repo({
         base: this.pr.base.sha,
@@ -36,24 +34,24 @@ export class GithubHelper {
       .filter(file => file.status === "modified")
       .map(file => file.filename);
     return files as string[];
-  };
+  }
 
-  async getRef  () {
+  async getRef() {
     const ref = await this.context.github.gitdata.getReference(
       this.context.repo({ ref: "heads/" + this.pr.head.ref })
     );
     return ref.data;
-  };
+  }
 
-  async getTree  () {
+  async getTree() {
     const ref = await this.getRef();
     const tree = await this.context.github.gitdata.getTree(
       this.context.repo({ tree_sha: ref.object.sha })
     );
     return tree.data;
-  };
+  }
 
-  async createBlob  (content: string) {
+  async createBlob(content: string) {
     const blob = await this.context.github.gitdata.createBlob(
       this.context.repo({
         number: this.pr.number,
@@ -62,9 +60,9 @@ export class GithubHelper {
       })
     );
     return blob.data;
-  };
+  }
 
-  async createStatus  (state: string, description: string) {
+  async createStatus(state: string, description: string) {
     const { head } = this.pr;
 
     let status = {
@@ -77,23 +75,23 @@ export class GithubHelper {
       this.context.repo(status) as any
     );
     return result.data;
-  };
+  }
 
-  async getComments  () {
+  async getComments() {
     const comments = await this.context.github.issues.getComments(
       this.context.repo({ number: this.pr.number })
     );
     return comments.data;
-  };
+  }
 
-  async createComment  (body: string) {
+  async createComment(body: string) {
     const result = await this.context.github.issues.createComment(
       this.context.repo({ number: this.pr.number, body })
     );
     return result.data;
-  };
+  }
 
-  async editComment  (body: string, comment_id: string) {
+  async editComment(body: string, comment_id: string) {
     const result = await this.context.github.issues.editComment(
       this.context.repo({
         number: this.pr.number,
@@ -103,9 +101,9 @@ export class GithubHelper {
     );
 
     return result.data;
-  };
+  }
 
-  async createCommit  (files: { path: string; content: string }[]) {
+  async createCommit(files: { path: string; content: string }[]) {
     const context = this.context;
     const github = context.github;
 
@@ -151,5 +149,5 @@ export class GithubHelper {
         ref: "heads/" + this.pr.head.ref
       })
     );
-  };
+  }
 }

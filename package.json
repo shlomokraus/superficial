@@ -17,7 +17,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./lib/index.js",
-    "lint": "standard **/*.ts --fix",
+    "pretty": "prettier --list-different --write \"**/*.{tsx,ts,json}\" \"!.next/**\" \"!.node_modules/**\"",
     "test": "jest  --config ./jest.config.js",
     "test:watch": "jest --watch --config ./jest.config.js"
   },

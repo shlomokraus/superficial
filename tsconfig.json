@@ -16,12 +16,8 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "declaration": true,
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "typeRoots": ["node_modules/@types"]
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "compileOnSave": false
 }

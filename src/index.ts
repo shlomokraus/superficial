@@ -34,10 +34,7 @@ async function extractPrs(context) {
   const event = context.name ? context.name : context.event;
   if (event === "issue_comment" && context.payload.action === "edited") {
     prs = [await retrievePr(context, context.payload.issue.number)];
-  } else if (
-    event === "pull_request" &&
-    context.payload.action === "opened"
-  ) {
+  } else if (event === "pull_request" && context.payload.action === "opened") {
     prs = [context.payload.pull_request];
   } else {
     prs = context.payload.check_suite.pull_requests;
