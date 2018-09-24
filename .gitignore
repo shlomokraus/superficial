@@ -64,3 +64,4 @@ typings/
 scripts/deploy.sh
 dist
 lib
+.DS_Store

@@ -27,6 +27,7 @@ export = async (app: Application) => {
     // Not all payloads have the pr object so we need to prepare it
     let prs = await extractPrs(context);
 
+    app.log.info("Got webhook request from "+context.payload.repository.html_url);
     await Promise.all(
       prs.map(async pr => {
         const handler = new Handler(context, pr, analytics);
