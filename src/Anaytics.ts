@@ -16,7 +16,7 @@ export class Analytics {
     }
 
     set(...args) {
-        return this.ua.set.apply(this.ua, args).send();
+        return this.ua.set.apply(this.ua, args);
     }
 
     timing(...args) {
