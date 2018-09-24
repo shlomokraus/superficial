@@ -5,6 +5,7 @@ import { GithubHelper } from "./Github";
 import { PullRequestsGetResponse } from "@octokit/rest";
 import { Persist } from "./Persist";
 import { CommentHelper } from "./Comment";
+import ua from "universal-analytics";
 
 import {
   BOT_IDENTIFIER,
@@ -19,6 +20,7 @@ export class Handler {
   private pr: PullRequestsGetResponse;
   private persist!: Persist;
   private readonly logger: Logger;
+  private readonly analytics;
 
   constructor(context: Context, pr: PullRequestsGetResponse) {
     this.context = context;
@@ -30,20 +32,43 @@ export class Handler {
       this.context,
       this.context.repo({ number: pr.number })
     );
+    const id = context.payload.installation
+      ? context.payload.installation.id
+      : undefined;
+
+    this.analytics = process.env.UA_ID
+      ? ua(process.env.UA_ID, id)
+      : {
+          event: () => ({ send: () => undefined }),
+          pageview: () => ({ send: () => undefined }),
+          exception: () => ({ send: () => undefined }),
+          set: () => undefined,
+          timing: () => ({ send: () => undefined })
+        };
+
+    this.analytics.set("uid", this.context.payload.sender.id);
   }
 
   /**
    * Main entry point
    */
   async handle() {
-    const event = this.context.name ? this.context.name : this.context.event;
+    try {
+      const event = this.context.name ? this.context.name : this.context.event;
 
-    this.logger.info("Handling action " + this.context.name);
+      this.analytics.event(event, this.context.payload.action).send();
+      this.logger.info("Handling action " + event);
 
-    if (event === "issue_comment" && this.context.payload.action === "edited") {
-      return this.handleCommentEdit();
-    } else {
-      return this.handleCheckStatus();
+      if (
+        event === "issue_comment" &&
+        this.context.payload.action === "edited"
+      ) {
+        return this.handleCommentEdit();
+      } else {
+        return this.handleCheckStatus();
+      }
+    } catch (ex) {
+      this.analytics.exception(ex.message).send();
     }
   }
 
@@ -73,6 +98,10 @@ export class Handler {
     );
 
     if (revert.length > 0) {
+      this.analytics
+        .event("revert", files.length, "success", revert.length)
+        .send();
+
       this.logger.info("Creating commit");
       await this.githubHelper.createCommit(revert);
       this.logger.info("Posting revert comment");
@@ -93,6 +122,9 @@ export class Handler {
         errors.length +
         " errors"
     );
+    this.analytics
+      .event("check", problematic.length, "errors", errors.length)
+      .send();
 
     this.logger.info("Updating pr status");
     await this.updateStatus(problematic.length === 0);
@@ -207,7 +239,7 @@ export class Handler {
       ? "ready to merge"
       : "superficial changes not allowed";
     await this.githubHelper.createStatus(state, message);
-  };
+  }
 
   async getBaseAndHead(path: string) {
     let head;
@@ -222,7 +254,7 @@ export class Handler {
     }
 
     return { head, base };
-  };
+  }
 
   filterFiles(files: string[]) {
     return files.filter(file => {
@@ -230,5 +262,4 @@ export class Handler {
       return VALID_EXTENSIONS.indexOf(ext) >= 0;
     });
   }
-
 }
