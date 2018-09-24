@@ -4,8 +4,6 @@
 
 *A GitHub ([Probot](https://github.com/probot/probot)) app that blocks and fixes superficial pull requests*
 
-![Alt Text](https://media.giphy.com/media/sRFu9nIfCiiUSa1ddv/giphy.gif)
-
 # Introduction
 
 Code review is a tedious task. It is more frustrating to find files that only have formatting updates without a change of functionality - those are **superficial changes**. 
@@ -37,6 +35,13 @@ This gives us high accuracy since it ignores any change that doesn't affect the 
 You have two options: 
 1. Deploy your own server.
 2. ### [Install Superficial on your repo](https://github.com/apps/superficial-bot)
+
+
+---
+
+<img align="center" width="750" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/superficial.gif">
+
+---
 
 ## Setup (for local run)
 
