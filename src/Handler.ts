@@ -5,13 +5,14 @@ import { GithubHelper } from "./Github";
 import { PullRequestsGetResponse } from "@octokit/rest";
 import { Persist } from "./Persist";
 import { CommentHelper } from "./Comment";
-import ua from "universal-analytics";
 
 import {
   BOT_IDENTIFIER,
   VALID_EXTENSIONS,
   SCRIPT_EXTENSIONS
 } from "./Constants";
+import { Analytics } from "./Anaytics";
+import { AnalyticEvents } from "./Constants";
 
 export class Handler {
   private readonly context: Context;
@@ -20,33 +21,20 @@ export class Handler {
   private pr: PullRequestsGetResponse;
   private persist!: Persist;
   private readonly logger: Logger;
-  private readonly analytics;
+  private readonly analytics: Analytics;
 
-  constructor(context: Context, pr: PullRequestsGetResponse) {
+  constructor(context: Context, pr: PullRequestsGetResponse, analytics: Analytics) {
     this.context = context;
     this.logger = context.log;
     this.pr = pr;
+    this.analytics = analytics;
+
     this.githubHelper = new GithubHelper(this.context, pr);
     this.commentHelper = new CommentHelper(this.githubHelper);
     this.persist = new Persist(
       this.context,
       this.context.repo({ number: pr.number })
     );
-    const id = context.payload.installation
-      ? context.payload.installation.id
-      : undefined;
-
-    this.analytics = process.env.UA_ID
-      ? ua(process.env.UA_ID, id)
-      : {
-          event: () => ({ send: () => undefined }),
-          pageview: () => ({ send: () => undefined }),
-          exception: () => ({ send: () => undefined }),
-          set: () => undefined,
-          timing: () => ({ send: () => undefined })
-        };
-
-    this.analytics.set("uid", this.context.payload.sender.id);
   }
 
   /**
@@ -56,8 +44,8 @@ export class Handler {
     try {
       const event = this.context.name ? this.context.name : this.context.event;
 
-      this.analytics.event(event, this.context.payload.action).send();
-      this.logger.info("Handling action " + event);
+      this.analytics.event(event, this.context.payload.action, "pr", this.pr.number)
+      this.logger.info("Handling action " + event + " for pr "+this.pr.number);
 
       if (
         event === "issue_comment" &&
@@ -68,7 +56,7 @@ export class Handler {
         return this.handleCheckStatus();
       }
     } catch (ex) {
-      this.analytics.exception(ex.message).send();
+      this.analytics.exception(ex.message)
     }
   }
 
@@ -99,8 +87,7 @@ export class Handler {
 
     if (revert.length > 0) {
       this.analytics
-        .event("revert", files.length, "success", revert.length)
-        .send();
+        .event(AnalyticEvents.RevertDone, files.length);
 
       this.logger.info("Creating commit");
       await this.githubHelper.createCommit(revert);
@@ -123,8 +110,8 @@ export class Handler {
         " errors"
     );
     this.analytics
-      .event("check", problematic.length, "errors", errors.length)
-      .send();
+      .event(AnalyticEvents.Check, problematic.length, "errors", errors.length)
+      
 
     this.logger.info("Updating pr status");
     await this.updateStatus(problematic.length === 0);

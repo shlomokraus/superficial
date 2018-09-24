@@ -6,3 +6,11 @@ export enum CommentTags {
   Main = "<!-- superficial-bot-main-comment -->",
   Update = "<!-- superficial-bot-update-comment -->"
 }
+
+export enum AnalyticEvents {
+  AppStarted = "AppStarted",
+  Webhook = "Webhook",
+  RevertDone = "RevertRequested",  
+  Check = "Check"  
+
+}
