@@ -1,15 +1,13 @@
 import { Context, Logger } from "probot";
 import { Parser } from "./Parser";
 import fileExtension from "file-extension";
-import { Template, Templates } from "./Template";
-import { template } from "lodash";
 import { GithubHelper } from "./Github";
 import { PullRequestsGetResponse } from "@octokit/rest";
 import { Persist } from "./Persist";
+import { CommentHelper } from "./Comment";
 
 import {
   BOT_IDENTIFIER,
-  CommentTags,
   VALID_EXTENSIONS,
   SCRIPT_EXTENSIONS
 } from "./Constants";
@@ -17,6 +15,7 @@ import {
 export class Handler {
   private readonly context: Context;
   private githubHelper!: GithubHelper;
+  private commentHelper!: CommentHelper;
   private pr: PullRequestsGetResponse;
   private persist!: Persist;
   private readonly logger: Logger;
@@ -26,6 +25,7 @@ export class Handler {
     this.logger = context.log;
     this.pr = pr;
     this.githubHelper = new GithubHelper(this.context, pr);
+    this.commentHelper = new CommentHelper(this.githubHelper);
     this.persist = new Persist(
       this.context,
       this.context.repo({ number: pr.number })
@@ -76,7 +76,7 @@ export class Handler {
       this.logger.info("Creating commit");
       await this.githubHelper.createCommit(revert);
       this.logger.info("Posting revert comment");
-      await this.postRevertComment(revert.map(file => file.path));
+      await this.commentHelper.postRevertComment(revert.map(file => file.path));
       await this.persist.set("files", undefined);
     }
   }
@@ -98,7 +98,7 @@ export class Handler {
     await this.updateStatus(problematic.length === 0);
 
     this.logger.info("Posting comment");
-    await this.postComment(problematic, errors);
+    await this.commentHelper.postComment(problematic, errors);
 
     if (problematic.length > 0) {
       const payload = JSON.stringify(problematic);
@@ -144,9 +144,7 @@ export class Handler {
 
     this.logger.info("Got " + files.length + " in pull request");
     this.logger.debug(JSON.stringify(files));
-
     files = this.filterFiles(files);
-
     this.logger.info("Got " + files.length + " relevant files after filter");
 
     const results = await Promise.all(
@@ -184,77 +182,6 @@ export class Handler {
     return { path, content: source.content };
   };
 
-  postRevertComment = async (files: string[]) => {
-    const fileItemsTemplate = Template.get(Templates.fileItem);
-    const renderedFiles = files.map(filename =>
-      template(fileItemsTemplate)({ filename })
-    );
-    const commentTemplate = Template.get(Templates.revert);
-    let comment = template(commentTemplate)({
-      files: renderedFiles.join("\n")
-    });
-
-    comment = this.tagComment(comment, CommentTags.Update);
-    await this.githubHelper.createComment(comment);
-  };
-
-  postComment = async (
-    items: { file: string; valid: boolean }[],
-    errors: { file: string; error: string }[] = []
-  ) => {
-    const files = items.map(item => item.file);
-    let comment = await this.compileComment(files, errors);
-
-    const existing = await this.getBotMainComment();
-    if (existing) {
-      if (files.length === 0) {
-        comment = this.tagComment(
-          Template.get(Templates.updated),
-          CommentTags.Main
-        );
-      }
-      await this.githubHelper.editComment(comment, String(existing.id));
-    } else {
-      if (files.length > 0) {
-        await this.githubHelper.createComment(comment);
-      }
-    }
-  };
-
-  getBotMainComment = async () => {
-    const comments = await this.githubHelper.getComments();
-    const filtered = comments.find(comment => {
-      const isBot = comment.user.login === BOT_IDENTIFIER;
-      if (!isBot) {
-        return false;
-      }
-
-      const body = comment.body;
-      return body.indexOf(CommentTags.Main) >= 0;
-    });
-    return filtered;
-  };
-
-  async compileComment(files: string[], errors: any[]) {
-    const fileItemsTemplate = Template.get(Templates.fileItem);
-    const renderedFiles = files.map(filename =>
-      template(fileItemsTemplate)({ filename })
-    );
-    const commentTemplate = Template.get(Templates.comment);
-    let comment = template(commentTemplate)({
-      files: renderedFiles.join("\n")
-    });
-
-    const errorCount = errors.length;
-    if (errorCount > 0) {
-      const errTemplate = Template.get(Templates.errors);
-      const errDoc = template(errTemplate)({ errors: errorCount });
-      comment = comment + "\n" + errDoc;
-    }
-
-    return this.tagComment(comment, CommentTags.Main);
-  }
-
   compareFiles(source: string, target: string, filename: string) {
     this.logger.info("Comparing file " + filename);
 
@@ -273,7 +200,7 @@ export class Handler {
     return diff !== undefined;
   }
 
-  updateStatus = async (success: boolean) => {
+  async updateStatus(success: boolean) {
     const state = success ? "success" : "failure";
     this.logger.info("Updating status to " + state);
     const message = success
@@ -282,7 +209,7 @@ export class Handler {
     await this.githubHelper.createStatus(state, message);
   };
 
-  getBaseAndHead = async (path: string) => {
+  async getBaseAndHead(path: string) {
     let head;
     let base;
     try {
@@ -304,13 +231,4 @@ export class Handler {
     });
   }
 
-  /**
-   * Tag comment with metadata
-   */
-  tagComment(body, commentTag: CommentTags) {
-    if (body.indexOf(commentTag) < 0) {
-      return body + "\n" + commentTag;
-    }
-    return body;
-  }
 }
