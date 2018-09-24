@@ -12,10 +12,14 @@ There are many reasons why this happens - a developer might have an automatic be
 
 Formatting changes should only be allowed in files that have actual functionality change. A formatting only changes should be submitted in its own pr. 
 
-## This bot can: 
+## This bot will: 
 1. Post status message indicating the PR contains superficial updates.
 2. Post comment listing the problematic files.
 3. Automatically revert to base all superficial files.
+
+| <img align="left" width="100%%" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/basic-message.png" />  | <img align="right" width="100%" src="https://raw.githubusercontent.com/shlomokraus/superficial/master/static/revert-message.png" /> | 
+|:---:|:---:|
+| Post warnning comment | Revert changes to files | 
 
 ## How does it work? 
 This bot has a three-step process to determine superficial updates: 
