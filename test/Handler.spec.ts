@@ -1,5 +1,6 @@
 import { Handler } from "../src/Handler";
 import { GithubHelper } from "../src/Github";
+import { Analytics } from "../src/Analytics";
 const prMock = require("./mocks/getPullRequest.json");
 const issueCommentEditedMock = require("./mocks/issue_comment_edited.json");
 const checkSuiteRequestedMock = require("./mocks/check_suite_requested.json");
@@ -7,6 +8,7 @@ const checkSuiteRequestedMock = require("./mocks/check_suite_requested.json");
 jest.mock("../src/Parser");
 jest.mock("../src/Github");
 jest.mock("../src/Persist");
+jest.mock("../src/Analytics");
 
 describe("Handler", () => {
   let context, issue, repo;
@@ -14,7 +16,7 @@ describe("Handler", () => {
   describe("handler()", () => {
     it("Should handle check status request", async () => {
       setupMocks(checkSuiteRequestedMock);
-      const handler = new Handler(context, prMock);
+      const handler = new Handler(context, prMock, new Analytics("*"));
       handler.handleCheckStatus = jest.fn();
 
       await handler.handle();
@@ -24,7 +26,7 @@ describe("Handler", () => {
 
     it("Should handle comment edit", async () => {
       setupMocks(issueCommentEditedMock);
-      const handler = new Handler(context, prMock);
+      const handler = new Handler(context, prMock, new Analytics("*"));
       handler.handleCommentEdit = jest.fn();
 
       await handler.handle();
@@ -37,7 +39,7 @@ describe("Handler", () => {
 
     it("Should retrieve list of files, parse and return result", async () => {
       setupMocks({});
-      const handler = new Handler(context, prMock);
+      const handler = new Handler(context, prMock, new Analytics("*"));
       GithubHelper.mock.instances[0].getFiles.mockImplementationOnce(async () => (["file1.ts", "file2.js", "file3.exe"]));
       handler.parseFile = jest.fn().mockResolvedValue({valid: false })
       const result = await handler.check();
@@ -54,7 +56,7 @@ describe("Handler", () => {
 
     it("Should get content for files and pass to comparer", async () => {
       setupMocks({});
-      const handler = new Handler(context, prMock);
+      const handler = new Handler(context, prMock, new Analytics("*"));
       GithubHelper.mock.instances[0].getFileContent.mockImplementation(async () => ("CONTENT"));
       handler.compareFiles = jest.fn().mockReturnValue(false)
       

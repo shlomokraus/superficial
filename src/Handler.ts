@@ -11,7 +11,7 @@ import {
   VALID_EXTENSIONS,
   SCRIPT_EXTENSIONS
 } from "./Constants";
-import { Analytics } from "./Anaytics";
+import { Analytics } from "./Analytics";
 import { AnalyticEvents } from "./Constants";
 
 export class Handler {

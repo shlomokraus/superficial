@@ -1,6 +1,6 @@
 import { Handler } from "./Handler";
 import { Application } from "probot";
-import { Analytics } from "./Anaytics";
+import { Analytics } from "./Analytics";
 import { AnalyticEvents } from "./Constants";
 
 const events = [
