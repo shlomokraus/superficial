@@ -62,3 +62,5 @@ typings/
 
 *.pem
 scripts/deploy.sh
+dist
+lib
