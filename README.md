@@ -40,6 +40,7 @@ You have two options:
 1. Deploy your own server or...
 2. [Click to unstall Superficial on your repo](https://github.com/apps/superficial-bot)
 
+> This is an open source project, deployed as a courtesy by the maintainer. It is provided as-is and without any Liability :heart: 
 ## Setup (for local run)
 
 1. Setup environment variables as explained in [the Probot guide](https://probot.github.io/docs/development/)
