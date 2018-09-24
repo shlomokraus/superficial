@@ -8,9 +8,9 @@
 
 Code review is a tedious task. It is more frustrating to find files that only have formatting updates without a change of functionality - those are **superficial changes**. 
 
-There are many reasons why this happens - a developer might have an automatic beautify on his IDE, he might start editing a file and stopped without reverting all changes and many more. No matter the reason, this makes the code review task even harder and also makes it difficult to track changes in the commit log. 
+There are many reasons why this happens - an automatic beautifier running in IDE, forgetting to revert changes, forgotten newlines or spaces. No matter the reason, superficial update makes the code review task even harder and adds chaos to the commit log. 
 
-Formatting changes should only be allowed in files that have actual functionality change. A formatting only changes should be submitted in its own pr. 
+**Formatting changes should only be allowed in files that have actual functionality change or be submitted in their own pr.**
 
 ## This bot will: 
 1. Post status message indicating the PR contains superficial updates.
