@@ -10,7 +10,6 @@ export enum CommentTags {
 export enum AnalyticEvents {
   AppStarted = "AppStarted",
   Webhook = "Webhook",
-  RevertDone = "RevertRequested",  
-  Check = "Check"  
-
+  RevertDone = "RevertRequested",
+  Check = "Check"
 }

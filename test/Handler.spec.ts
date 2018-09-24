@@ -36,36 +36,40 @@ describe("Handler", () => {
   });
 
   describe("check()", () => {
-
     it("Should retrieve list of files, parse and return result", async () => {
       setupMocks({});
       const handler = new Handler(context, prMock, new Analytics("*"));
-      GithubHelper.mock.instances[0].getFiles.mockImplementationOnce(async () => (["file1.ts", "file2.js", "file3.exe"]));
-      handler.parseFile = jest.fn().mockResolvedValue({valid: false })
+      GithubHelper.mock.instances[0].getFiles.mockImplementationOnce(
+        async () => ["file1.ts", "file2.js", "file3.exe"]
+      );
+      handler.parseFile = jest.fn().mockResolvedValue({ valid: false });
       const result = await handler.check();
 
       expect(handler.parseFile).toBeCalledTimes(2);
       expect(handler.parseFile.mock.calls[0][0]).toEqual("file1.ts");
       expect(handler.parseFile.mock.calls[1][0]).toEqual("file2.js");
-      expect(result).toEqual({problematic: [{valid: false},{valid: false}], errors: []})
-    })
-
-  })
+      expect(result).toEqual({
+        problematic: [{ valid: false }, { valid: false }],
+        errors: []
+      });
+    });
+  });
 
   describe("parseFile()", () => {
-
     it("Should get content for files and pass to comparer", async () => {
       setupMocks({});
       const handler = new Handler(context, prMock, new Analytics("*"));
-      GithubHelper.mock.instances[0].getFileContent.mockImplementation(async () => ("CONTENT"));
-      handler.compareFiles = jest.fn().mockReturnValue(false)
-      
+      GithubHelper.mock.instances[0].getFileContent.mockImplementation(
+        async () => "CONTENT"
+      );
+      handler.compareFiles = jest.fn().mockReturnValue(false);
+
       const result = await handler.parseFile("File");
-      
+
       expect(handler.compareFiles).toBeCalledWith("CONTENT", "CONTENT", "File");
-      expect(result).toEqual({file: "File", valid: false, error: undefined})
-    })
-  })
+      expect(result).toEqual({ file: "File", valid: false, error: undefined });
+    });
+  });
 
   const setupMocks = basePayload => {
     jest.clearAllMocks();

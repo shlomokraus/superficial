@@ -17,8 +17,8 @@ export = async (app: Application) => {
   app.log("Registering events", events);
 
   const analytics = new Analytics(UA_ID);
-  analytics.event(AnalyticEvents.AppStarted, "ok")
- 
+  analytics.event(AnalyticEvents.AppStarted, "ok");
+
   // Register events
   app.on(events, async context => {
     analytics.set("uid", context.payload.installation.id);

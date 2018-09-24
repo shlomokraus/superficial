@@ -23,7 +23,11 @@ export class Handler {
   private readonly logger: Logger;
   private readonly analytics: Analytics;
 
-  constructor(context: Context, pr: PullRequestsGetResponse, analytics: Analytics) {
+  constructor(
+    context: Context,
+    pr: PullRequestsGetResponse,
+    analytics: Analytics
+  ) {
     this.context = context;
     this.logger = context.log;
     this.pr = pr;
@@ -44,8 +48,15 @@ export class Handler {
     try {
       const event = this.context.name ? this.context.name : this.context.event;
 
-      this.analytics.event(event, this.context.payload.action, "pr", this.pr.number)
-      this.logger.info("Handling action " + event + " for pr "+this.pr.number);
+      this.analytics.event(
+        event,
+        this.context.payload.action,
+        "pr",
+        this.pr.number
+      );
+      this.logger.info(
+        "Handling action " + event + " for pr " + this.pr.number
+      );
 
       if (
         event === "issue_comment" &&
@@ -56,7 +67,7 @@ export class Handler {
         return this.handleCheckStatus();
       }
     } catch (ex) {
-      this.analytics.exception(ex.message)
+      this.analytics.exception(ex.message);
     }
   }
 
@@ -86,8 +97,7 @@ export class Handler {
     );
 
     if (revert.length > 0) {
-      this.analytics
-        .event(AnalyticEvents.RevertDone, files.length);
+      this.analytics.event(AnalyticEvents.RevertDone, files.length);
 
       this.logger.info("Creating commit");
       await this.githubHelper.createCommit(revert);
@@ -109,9 +119,12 @@ export class Handler {
         errors.length +
         " errors"
     );
-    this.analytics
-      .event(AnalyticEvents.Check, problematic.length, "errors", errors.length)
-      
+    this.analytics.event(
+      AnalyticEvents.Check,
+      problematic.length,
+      "errors",
+      errors.length
+    );
 
     this.logger.info("Updating pr status");
     await this.updateStatus(problematic.length === 0);
