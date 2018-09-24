@@ -1,4 +1,4 @@
-# Don't be [SUPERFICIAL](https://superficial.herokuapp.com)!
+# Don't be [SUPERFICIAL](https://github.com/shlomokraus/superficial)!
 
 #### This pull request contains files that have formatting changes without any functionality change. 
 
